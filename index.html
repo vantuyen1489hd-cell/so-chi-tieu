@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="vi" data-giao-dien="toi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Sổ Chi Tiêu</title>
+<meta name="theme-color" content="#131E19">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sổ Chi Tiêu">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lora:ital,wght@0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ══════════ MỘC ĐÊM (mặc định) ══════════ */
+:root{
+  --nen:#131E19;
+  --nen-sau:#0D1613;
+  --the:#1B2A23;
+  --the-noi:#22342C;
+  --vach:#2E453A;
+  --vach-mo:#243830;
+  --chu:#E4EFE7;
+  --chu-2:#B8CDC0;
+  --mo:#7E9A8B;
+  --ngoc:#4FC08D;
+  --ngoc-dam:#2E8B63;
+  --ngoc-mo:rgba(79,192,141,.15);
+  --hp:#E0A45C;            /* hổ phách — tiền ra */
+  --hp-mo:rgba(224,164,92,.15);
+  --canh:#C97B4B;          /* vượt mức */
+  --tre:#93C36E;
+  --lam:#5EA8B8;
+  --bong:0 4px 16px rgba(0,0,0,.32);
+  --bong-nho:0 2px 6px rgba(0,0,0,.22);
+  --van:rgba(255,255,255,.022);
+  --r:15px; --sp:16px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+  --f-ui:'Be Vietnam Pro',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --f-hien:'Lora',Georgia,serif;
+  --f-so:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --nay:cubic-bezier(.34,1.4,.5,1);      /* nảy nhẹ */
+  --muot:cubic-bezier(.25,.9,.3,1);
+}
+/* ══════════ MỘC SÁNG ══════════ */
+[data-giao-dien="sang"]{
+  --nen:#E3EBDE;
+  --nen-sau:#D6E1D1;
+  --the:#F1F5EC;
+  --the-noi:#E8EFE2;
+  --vach:#C4D3BC;
+  --vach-mo:#D5E0CE;
+  --chu:#17261F;
+  --chu-2:#33463B;
+  --mo:#66806F;
+  --ngoc:#2E8B63;
+  --ngoc-dam:#1F6B4A;
+  --ngoc-mo:rgba(46,139,99,.12);
+  --hp:#B0762F;
+  --hp-mo:rgba(176,118,47,.13);
+  --canh:#A85C33;
+  --tre:#5C9440;
+  --lam:#3E7E90;
+  --bong:0 3px 12px rgba(23,38,31,.1);
+  --bong-nho:0 1px 4px rgba(23,38,31,.08);
+  --van:rgba(23,38,31,.022);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  font-family:var(--f-ui); color:var(--chu); background:var(--nen);
+  /* vân gỗ mờ */
+  background-image:
+    repeating-linear-gradient(94deg, var(--van) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(87deg, var(--van) 0 1px, transparent 1px 11px);
+  font-size:15px; line-height:1.45; overscroll-behavior-y:none;
+  -webkit-font-smoothing:antialiased;
+  transition:background-color .35s ease,color .35s ease;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{border:none;background:none;cursor:pointer;padding:0}
+.so{font-family:var(--f-so);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.an{display:none!important}
+
+/* ══ Hiệu ứng chung ══ */
+@keyframes noiLen{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+@keyframes vaoTrai{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+@keyframes vaoPhai{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
+@keyframes bung{0%{transform:scale(1)}45%{transform:scale(1.09)}100%{transform:scale(1)}}
+@keyframes tho{0%,100%{box-shadow:0 6px 20px rgba(79,192,141,.3),0 0 0 0 var(--ngoc-mo)}
+               50%{box-shadow:0 6px 20px rgba(79,192,141,.42),0 0 0 11px transparent}}
+@keyframes lanRa{from{transform:scale(.5);opacity:.5}to{transform:scale(2.6);opacity:0}}
+
+.hien-dan>*{animation:noiLen .34s var(--muot) both;animation-delay:calc(var(--i,0)*32ms)}
+.tab-trai{animation:vaoTrai .3s var(--muot)}
+.tab-phai{animation:vaoPhai .3s var(--muot)}
+.bung{animation:bung .28s var(--nay)}
+
+/* ══ Khung ══ */
+#app{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;
+     padding-bottom:calc(88px + var(--safe-b))}
+header{padding:calc(var(--safe-t) + 14px) var(--sp) 0}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo i{width:5px;height:24px;border-radius:3px;display:block;
+  background:linear-gradient(180deg,var(--tre),var(--ngoc-dam))}
+.logo span{font-family:var(--f-hien);font-style:italic;font-weight:600;font-size:19.5px}
+.nut-tron{width:39px;height:39px;border-radius:50%;background:var(--the);border:1px solid var(--vach);
+  display:grid;place-items:center;font-size:16px;box-shadow:var(--bong-nho);
+  transition:transform .18s var(--nay),background .2s}
+.nut-tron:active{transform:scale(.88) rotate(-18deg);background:var(--the-noi)}
+
+.thang{display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:14px}
+.thang button{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+  color:var(--mo);font-size:18px;transition:background .16s,transform .18s var(--nay),color .16s}
+.thang button:active{background:var(--the-noi);transform:scale(.85);color:var(--ngoc)}
+.thang b{font-weight:600;font-size:15px;min-width:136px;text-align:center}
+
+/* ══ Thẻ tổng ══ */
+.tong{background:var(--the);border:1px solid var(--vach);border-radius:var(--r);
+  padding:18px;box-shadow:var(--bong);position:relative;overflow:hidden}
+.tong::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--tre),var(--ngoc),transparent)}
+.nhan{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mo)}
+.tong-so{font-family:var(--f-so);font-weight:600;font-size:34px;letter-spacing:-.035em;
+  margin:5px 0 2px;line-height:1.05;word-break:break-all;transition:color .3s}
+.tong-so.am{color:var(--canh)}
+.tong-phu{font-size:12.5px;color:var(--mo);margin-bottom:14px}
+.thanh{height:9px;border-radius:5px;background:var(--nen-sau);overflow:hidden}
+.thanh i{display:block;height:100%;width:0;border-radius:5px;
+  transition:width .85s var(--muot),background-color .4s}
+.thanh-ct{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;font-size:12px}
+.thanh-ct span{color:var(--mo)}
+.thanh-ct b{font-family:var(--f-so);font-weight:600}
+.doi{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--vach)}
+.doi>div{flex:1}
+.doi .v{font-family:var(--f-so);font-weight:600;font-size:16px;margin-top:1px}
+.v.thu{color:var(--ngoc)} .v.chi{color:var(--hp)}
+
+/* ══ Tab ══ */
+nav.tab{display:flex;gap:3px;margin:16px var(--sp) 0;background:var(--nen-sau);
+  padding:4px;border-radius:12px;border:1px solid var(--vach-mo)}
+nav.tab button{flex:1;padding:9px 2px;border-radius:9px;font-size:12.5px;font-weight:600;
+  color:var(--mo);transition:color .2s,background .25s var(--muot),transform .18s}
+nav.tab button:active{transform:scale(.94)}
+nav.tab button[aria-selected="true"]{background:var(--the);color:var(--chu);box-shadow:var(--bong-nho)}
+
+main{padding:16px var(--sp) 0;flex:1}
+.muc{margin-bottom:22px}
+.muc-dau{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.muc-dau h2{font-family:var(--f-hien);font-style:italic;font-weight:600;font-size:16px;margin:0}
+.muc-dau span{font-size:12px;color:var(--mo)}
+.hop{background:var(--the);border:1px solid var(--vach);border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--bong-nho)}
+
+/* ══ Danh sách ══ */
+.dong{display:flex;align-items:center;gap:12px;padding:12px 14px;width:100%;text-align:left;
+  border-bottom:1px solid var(--vach-mo);background:transparent;
+  transition:background .16s,transform .16s}
+.dong:last-child{border-bottom:none}
+.dong:active{background:var(--the-noi);transform:scale(.985)}
+.bieu{width:39px;height:39px;border-radius:11px;display:grid;place-items:center;font-size:18px;
+  background:var(--the-noi);flex-shrink:0;border:1px solid var(--vach-mo);
+  transition:transform .2s var(--nay)}
+.dong:active .bieu{transform:scale(1.12) rotate(-6deg)}
+.dong-giua{flex:1;min-width:0}
+.dong-ten{font-weight:500;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dong-phu{font-size:12px;color:var(--mo);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dong-tien{font-family:var(--f-so);font-weight:600;font-size:14.5px;flex-shrink:0}
+.dong-tien.chi{color:var(--hp)} .dong-tien.thu{color:var(--ngoc)} .dong-tien.chuyen{color:var(--lam)}
+.ngay-dau{display:flex;justify-content:space-between;align-items:baseline;
+  padding:9px 14px;background:var(--nen-sau);border-bottom:1px solid var(--vach-mo)}
+.ngay-dau span{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mo)}
+.ngay-dau b{font-family:var(--f-so);font-size:12px;font-weight:600}
+
+/* ══ Vòng tròn ══ */
+.bd{display:flex;align-items:center;gap:18px;padding:18px 16px}
+.bd circle.lat{transition:stroke-dasharray .9s var(--muot),stroke-dashoffset .9s var(--muot)}
+.bd-tam{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.bd-tam small{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mo);display:block}
+.bd-tam b{font-family:var(--f-so);font-size:14.5px;font-weight:600;letter-spacing:-.03em}
+.bd-chu{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.chu-dong{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.cham{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.chu-dong span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--chu-2)}
+.chu-dong b{font-family:var(--f-so);font-weight:600;font-size:12px}
+
+/* ══ Ngân sách ══ */
+.ns{padding:13px 14px;border-bottom:1px solid var(--vach-mo)}
+.ns:last-child{border-bottom:none}
+.ns-dau{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.ns-dau .e{font-size:15px}
+.ns-dau .t{flex:1;font-size:13.5px;font-weight:500}
+.ns-dau .s{font-family:var(--f-so);font-size:12px;color:var(--mo)}
+.ns-dau .s b{color:var(--chu);font-weight:600}
+.ns.vuot .s b{color:var(--canh)}
+
+/* ══ So sánh — cột ══ */
+.cot-khung{display:flex;align-items:flex-end;gap:7px;height:132px;padding:18px 14px 0}
+.cot{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;
+  justify-content:flex-end;transition:transform .18s var(--nay)}
+.cot:active{transform:scale(.93)}
+.cot .thanh-doc{width:100%;max-width:38px;border-radius:7px 7px 3px 3px;background:var(--hp-mo);
+  position:relative;overflow:hidden;flex-shrink:0;min-height:4px}
+.cot .thanh-doc i{position:absolute;bottom:0;left:0;right:0;border-radius:7px 7px 3px 3px;
+  background:linear-gradient(180deg,var(--hp),rgba(224,164,92,.55));height:0;
+  transition:height .8s var(--muot);transition-delay:calc(var(--i,0)*70ms)}
+.cot.nay .thanh-doc i{background:linear-gradient(180deg,var(--ngoc),var(--ngoc-dam))}
+.cot small{font-size:10.5px;color:var(--mo);font-weight:600;white-space:nowrap}
+.cot.nay small{color:var(--ngoc)}
+.cot-so{font-family:var(--f-so);font-size:9.5px;color:var(--chu-2);height:12px}
+
+/* ══ So sánh — dòng chênh lệch ══ */
+.ss{display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid var(--vach-mo)}
+.ss:last-child{border-bottom:none}
+.ss-ten{flex:1;min-width:0;font-size:13.5px;font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ss-cot{text-align:right;flex-shrink:0}
+.ss-cot .a{font-family:var(--f-so);font-weight:600;font-size:13.5px}
+.ss-cot .b{font-size:11px;color:var(--mo);font-family:var(--f-so)}
+.mui{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:600;
+  padding:3px 8px;border-radius:7px;font-family:var(--f-so);flex-shrink:0;min-width:66px;
+  justify-content:center}
+.mui.len{background:var(--hp-mo);color:var(--hp)}
+.mui.xuong{background:var(--ngoc-mo);color:var(--ngoc)}
+.mui.bang{background:var(--the-noi);color:var(--mo)}
+
+.tomtat{display:flex;gap:1px;background:var(--vach-mo)}
+.tomtat>div{flex:1;background:var(--the);padding:14px 12px;text-align:center}
+.tomtat .v{font-family:var(--f-so);font-weight:600;font-size:17px;margin:3px 0 2px}
+.tomtat .d{font-size:11px;font-weight:600;font-family:var(--f-so)}
+
+/* ══ Ví ══ */
+.vi-dong{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--vach-mo);
+  width:100%;text-align:left;background:transparent;transition:background .16s,transform .16s}
+.vi-dong:last-child{border-bottom:none}
+.vi-dong:active{background:var(--the-noi);transform:scale(.985)}
+
+/* ══ Nút ══ */
+.nut{position:relative;overflow:hidden;display:block;width:100%;padding:13.5px;border-radius:12px;
+  font-weight:600;font-size:14.5px;text-align:center;
+  transition:transform .16s var(--nay),filter .2s}
+.nut:active{transform:scale(.965)}
+.nut-chinh{background:linear-gradient(135deg,var(--ngoc),var(--ngoc-dam));color:#0B1710;
+  box-shadow:0 3px 12px rgba(79,192,141,.26)}
+.nut-phu{background:var(--the);border:1px solid var(--vach);color:var(--chu)}
+.nut-canh{background:var(--hp-mo);color:var(--canh);border:1px solid rgba(201,123,75,.3)}
+.nut-hang{display:flex;gap:10px}
+.nut-hang .nut{flex:1}
+.song{position:absolute;border-radius:50%;background:currentColor;opacity:.22;
+  pointer-events:none;animation:lanRa .55s ease-out forwards}
+
+#fab{position:fixed;left:50%;bottom:calc(20px + var(--safe-b));
+  width:62px;height:62px;border-radius:50%;color:#0B1710;font-size:30px;
+  display:grid;place-items:center;z-index:40;line-height:1;font-weight:300;
+  background:linear-gradient(140deg,var(--tre),var(--ngoc-dam));
+  transform:translateX(-50%);
+  transition:transform .28s var(--nay);
+  animation:tho 3.6s ease-in-out infinite;
+  box-shadow:0 6px 20px rgba(79,192,141,.3)}
+#fab:active{transform:translateX(-50%) scale(.9) rotate(90deg)}
+#fab.mo{transform:translateX(-50%) rotate(135deg) scale(.86)}
+
+/* ══ Phiếu ══ */
+.man{position:fixed;inset:0;background:rgba(6,14,11,.62);z-index:50;opacity:0;pointer-events:none;
+  transition:opacity .3s;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.man.mo{opacity:1;pointer-events:auto}
+.phieu{position:fixed;left:0;right:0;bottom:0;z-index:51;max-width:520px;margin:0 auto;
+  background:var(--the);border-radius:22px 22px 0 0;transform:translateY(101%);
+  transition:transform .42s var(--nay);max-height:94vh;display:flex;flex-direction:column;
+  box-shadow:0 -6px 34px rgba(0,0,0,.4);border-top:1px solid var(--vach)}
+.phieu.mo{transform:translateY(0)}
+.rang{height:11px;flex-shrink:0;border-radius:22px 22px 0 0;margin-bottom:-1px;
+  background:repeating-linear-gradient(90deg,var(--the) 0 7px,transparent 7px 14px)}
+.phieu-keo{width:40px;height:4px;border-radius:2px;background:var(--vach);margin:9px auto 0;flex-shrink:0}
+.phieu-dau{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 0;flex-shrink:0}
+.phieu-dau h3{font-family:var(--f-hien);font-style:italic;font-weight:600;font-size:17.5px;margin:0}
+.phieu-than{overflow-y:auto;padding:0 18px calc(20px + var(--safe-b));-webkit-overflow-scrolling:touch}
+
+.loai{display:flex;gap:4px;background:var(--nen-sau);padding:4px;border-radius:12px;
+  margin:14px 0 16px;border:1px solid var(--vach-mo)}
+.loai button{flex:1;padding:9.5px 0;border-radius:9px;font-size:13px;font-weight:600;color:var(--mo);
+  transition:all .25s var(--muot)}
+.loai button:active{transform:scale(.94)}
+.loai button[aria-pressed="true"]{background:var(--the);box-shadow:var(--bong-nho)}
+.loai button[aria-pressed="true"][data-l="chi"]{color:var(--hp)}
+.loai button[aria-pressed="true"][data-l="thu"]{color:var(--ngoc)}
+.loai button[aria-pressed="true"][data-l="chuyen"]{color:var(--lam)}
+
+.tien-o{text-align:center;padding:6px 0 14px;position:relative}
+.tien-so{font-family:var(--f-so);font-weight:600;font-size:39px;letter-spacing:-.04em;line-height:1.1;
+  word-break:break-all;min-height:46px;transition:color .25s}
+.tien-so.trong{color:var(--vach)}
+.tien-so.chi{color:var(--hp)} .tien-so.thu{color:var(--ngoc)} .tien-so.chuyen{color:var(--lam)}
+
+#dau{position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-13deg) scale(2.4);
+  border:3px double var(--ngoc);color:var(--ngoc);padding:7px 17px;border-radius:8px;
+  font-weight:700;font-size:20px;letter-spacing:.16em;opacity:0;pointer-events:none;white-space:nowrap;
+  background:var(--the);box-shadow:0 0 22px var(--ngoc-mo)}
+#dau.dong-dau{animation:dongdau .8s var(--nay) forwards}
+@keyframes dongdau{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(-13deg) scale(2.4)}
+  20%{opacity:1;transform:translate(-50%,-50%) rotate(-13deg) scale(.94)}
+  30%{transform:translate(-50%,-50%) rotate(-13deg) scale(1.02)}
+  74%{opacity:1;transform:translate(-50%,-50%) rotate(-13deg) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) rotate(-13deg) scale(1.06)}
+}
+
+.phim{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+.phim button{position:relative;overflow:hidden;height:51px;border-radius:12px;
+  background:var(--the-noi);font-family:var(--f-so);font-weight:600;font-size:20px;
+  border:1px solid var(--vach-mo);
+  transition:background .12s,transform .13s var(--nay),border-color .15s}
+.phim button:active{background:var(--nen-sau);transform:scale(.93);border-color:var(--ngoc)}
+.phim button.nho{font-size:16px}
+
+.chip-hang{display:flex;gap:7px;overflow-x:auto;padding:2px 18px 8px;margin:0 -18px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.chip-hang::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:8.5px 13px;border-radius:11px;
+  background:var(--the-noi);border:1px solid var(--vach-mo);font-size:13px;font-weight:500;
+  white-space:nowrap;transition:all .22s var(--nay)}
+.chip:active{transform:scale(.92)}
+.chip[aria-pressed="true"]{background:var(--ngoc-mo);border-color:var(--ngoc);color:var(--ngoc);
+  transform:scale(1.03)}
+
+.truong{margin-bottom:13px}
+.truong>label{display:block;font-size:10.5px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--mo);margin-bottom:6px}
+.o{width:100%;padding:12.5px 13px;border-radius:12px;border:1px solid var(--vach);
+  background:var(--the-noi);font-size:15px;outline:none;
+  transition:border-color .22s,box-shadow .22s,background .22s}
+.o:focus{border-color:var(--ngoc);background:var(--nen-sau);box-shadow:0 0 0 3px var(--ngoc-mo)}
+select.o{appearance:none}
+.hai{display:flex;gap:10px}
+.hai>*{flex:1;min-width:0}
+
+#banh{position:fixed;left:50%;transform:translateX(-50%) translateY(-30px) scale(.9);
+  top:calc(var(--safe-t) + 12px);z-index:80;background:var(--the-noi);color:var(--chu);
+  border:1px solid var(--ngoc);padding:10.5px 18px;border-radius:12px;font-size:13.5px;
+  font-weight:500;opacity:0;transition:all .34s var(--nay);pointer-events:none;
+  box-shadow:var(--bong);max-width:90%}
+#banh.hien{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+
+.rong{text-align:center;padding:40px 20px;color:var(--mo)}
+.rong .e{font-size:36px;display:block;margin-bottom:11px;opacity:.55;
+  animation:bung 2.4s ease-in-out infinite}
+.rong p{margin:0 0 3px;font-size:14px;font-weight:500;color:var(--chu-2)}
+.rong small{font-size:12.5px}
+footer{text-align:center;padding:18px 0 6px;font-size:11px;color:var(--mo);letter-spacing:.04em}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="hdr-top">
+      <div class="logo"><i></i><span>Sổ Chi Tiêu</span></div>
+      <button class="nut-tron" id="btCaiDat" aria-label="Cài đặt">⚙️</button>
+    </div>
+    <div class="thang">
+      <button id="btTruoc" aria-label="Tháng trước">‹</button>
+      <b id="nhanThang">—</b>
+      <button id="btSau" aria-label="Tháng sau">›</button>
+    </div>
+    <div class="tong">
+      <div class="nhan" id="nhanTong">Còn lại trong tháng</div>
+      <div class="tong-so so" id="soTong">0 ₫</div>
+      <div class="tong-phu" id="phuTong">Chưa đặt ngân sách</div>
+      <div class="thanh"><i id="thanhNS"></i></div>
+      <div class="thanh-ct"><span id="ctNS">—</span><b id="ctPT">0%</b></div>
+      <div class="doi">
+        <div><div class="nhan">Thu vào</div><div class="v thu so" id="soThu">0 ₫</div></div>
+        <div><div class="nhan">Chi ra</div><div class="v chi so" id="soChi">0 ₫</div></div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tab" role="tablist">
+    <button role="tab" data-tab="tong" aria-selected="true">Tổng quan</button>
+    <button role="tab" data-tab="gd" aria-selected="false">Giao dịch</button>
+    <button role="tab" data-tab="ss" aria-selected="false">So sánh</button>
+    <button role="tab" data-tab="vi" aria-selected="false">Ví</button>
+  </nav>
+
+  <main>
+    <div id="tTong"></div>
+    <div id="tGd" class="an"></div>
+    <div id="tSs" class="an"></div>
+    <div id="tVi" class="an"></div>
+  </main>
+  <footer>Dữ liệu lưu trên máy này · v1.1</footer>
+</div>
+
+<button id="fab" aria-label="Thêm giao dịch">+</button>
+<div class="man" id="man"></div>
+
+<div class="phieu" id="phieu" role="dialog" aria-modal="true" aria-label="Phiếu ghi">
+  <div class="rang"></div><div class="phieu-keo"></div>
+  <div class="phieu-dau">
+    <h3 id="phieuTen">Phiếu chi</h3>
+    <button class="nut-tron" id="btDong" aria-label="Đóng">✕</button>
+  </div>
+  <div class="phieu-than">
+    <div class="loai">
+      <button data-l="chi" aria-pressed="true">Chi ra</button>
+      <button data-l="thu" aria-pressed="false">Thu vào</button>
+      <button data-l="chuyen" aria-pressed="false">Chuyển ví</button>
+    </div>
+    <div class="tien-o">
+      <div class="nhan">Số tiền</div>
+      <div class="tien-so so trong" id="oTien">0 ₫</div>
+      <div id="dau">ĐÃ GHI</div>
+    </div>
+    <div class="phim" id="phim">
+      <button data-p="1">1</button><button data-p="2">2</button><button data-p="3">3</button>
+      <button data-p="4">4</button><button data-p="5">5</button><button data-p="6">6</button>
+      <button data-p="7">7</button><button data-p="8">8</button><button data-p="9">9</button>
+      <button data-p="000" class="nho">000</button><button data-p="0">0</button>
+      <button data-p="x" class="nho" aria-label="Xóa">⌫</button>
+    </div>
+    <div class="truong" id="oDanhMuc"><label>Danh mục</label><div class="chip-hang" id="chipDM"></div></div>
+    <div class="truong" id="oViTu"><label id="nhanViTu">Ví</label><div class="chip-hang" id="chipVi"></div></div>
+    <div class="truong an" id="oViDen"><label>Chuyển đến ví</label><div class="chip-hang" id="chipVi2"></div></div>
+    <div class="hai">
+      <div class="truong"><label>Ngày</label><input type="date" class="o" id="oNgay"></div>
+      <div class="truong"><label>Ghi chú</label><input type="text" class="o" id="oGhiChu" placeholder="Không bắt buộc" maxlength="80"></div>
+    </div>
+    <div class="nut-hang" style="margin-top:4px">
+      <button class="nut nut-canh an" id="btXoa">Xóa phiếu</button>
+      <button class="nut nut-chinh" id="btLuu">Lưu phiếu</button>
+    </div>
+  </div>
+</div>
+
+<div class="phieu" id="phieuCD" role="dialog" aria-modal="true" aria-label="Cài đặt">
+  <div class="rang"></div><div class="phieu-keo"></div>
+  <div class="phieu-dau">
+    <h3 id="cdTen">Cài đặt</h3>
+    <button class="nut-tron" id="btDongCD" aria-label="Đóng">✕</button>
+  </div>
+  <div class="phieu-than" id="cdThan"></div>
+</div>
+
+<div id="banh"></div>
+
+<script>
+"use strict";
+
+/* ══ Lưu trữ ══ */
+const KHOA = 'sochitieu.v1';
+let boNhoTam = null, luuDuoc = true;
+function doc(){
+  try{ const s = localStorage.getItem(KHOA); return s ? JSON.parse(s) : null; }
+  catch(e){ luuDuoc = false; return boNhoTam; }
+}
+function ghi(){
+  try{ localStorage.setItem(KHOA, JSON.stringify(D)); }
+  catch(e){ luuDuoc = false; boNhoTam = JSON.parse(JSON.stringify(D)); }
+}
+
+function macDinh(){
+  return {
+    phienBan:2,
+    vi:[{id:'v1',ten:'Tiền mặt',bieu:'💵',dauKy:0},{id:'v2',ten:'Ngân hàng',bieu:'🏦',dauKy:0}],
+    dm:[
+      {id:'c1',ten:'Ăn uống',bieu:'🍜',loai:'chi',ns:0},
+      {id:'c2',ten:'Chợ, siêu thị',bieu:'🛒',loai:'chi',ns:0},
+      {id:'c3',ten:'Xăng xe, đi lại',bieu:'⛽',loai:'chi',ns:0},
+      {id:'c4',ten:'Hóa đơn, tiện ích',bieu:'🧾',loai:'chi',ns:0},
+      {id:'c5',ten:'Sức khỏe',bieu:'💊',loai:'chi',ns:0},
+      {id:'c6',ten:'Gia đình',bieu:'👨‍👩‍👧',loai:'chi',ns:0},
+      {id:'c7',ten:'Giải trí',bieu:'🎬',loai:'chi',ns:0},
+      {id:'c8',ten:'Hiếu hỉ',bieu:'🎊',loai:'chi',ns:0},
+      {id:'c9',ten:'Khác',bieu:'📌',loai:'chi',ns:0},
+      {id:'t1',ten:'Lương',bieu:'💼',loai:'thu',ns:0},
+      {id:'t2',ten:'Thưởng',bieu:'🎁',loai:'thu',ns:0},
+      {id:'t3',ten:'Đầu tư',bieu:'📈',loai:'thu',ns:0},
+      {id:'t4',ten:'Khác',bieu:'💰',loai:'thu',ns:0}
+    ],
+    gd:[], cai:{nsThang:0, giaoDien:'toi'}
+  };
+}
+let D = doc() || macDinh();
+D.cai = D.cai || {}; D.cai.nsThang = D.cai.nsThang || 0;
+D.cai.giaoDien = D.cai.giaoDien || 'toi';
+D.vi = D.vi || []; D.dm = D.dm || []; D.gd = D.gd || [];
+
+/* ══ Tiện ích ══ */
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const ma = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const nf = new Intl.NumberFormat('vi-VN');
+const rung = n => { if(navigator.vibrate) navigator.vibrate(n); };
+
+function tien(n){ return nf.format(Math.round(n)) + ' ₫'; }
+function tienNgan(n){
+  const a = Math.abs(n);
+  if(a >= 1e9) return (n/1e9).toFixed(a>=1e10?0:1).replace('.',',') + ' tỷ';
+  if(a >= 1e6) return (n/1e6).toFixed(a>=1e7?0:1).replace('.',',') + ' tr';
+  if(a >= 1e3) return Math.round(n/1e3) + 'k';
+  return nf.format(Math.round(n));
+}
+function khoaThang(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
+function ngayISO(d){ return khoaThang(d) + '-' + String(d.getDate()).padStart(2,'0'); }
+function dichThang(k, n){
+  const [y,m] = k.split('-').map(Number);
+  return khoaThang(new Date(y, m-1+n, 1));
+}
+const THU = ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
+function nhanNgay(iso){
+  const h = ngayISO(new Date());
+  if(iso === h) return 'Hôm nay';
+  const q = new Date(); q.setDate(q.getDate()-1);
+  if(iso === ngayISO(q)) return 'Hôm qua';
+  const d = new Date(iso + 'T00:00:00');
+  return THU[d.getDay()] + ', ' + d.getDate() + '/' + (d.getMonth()+1);
+}
+function banh(t){
+  const b = $('#banh'); b.textContent = t; b.classList.add('hien');
+  clearTimeout(b._h); b._h = setTimeout(()=> b.classList.remove('hien'), 2200);
+}
+function timDM(id){ return D.dm.find(x=>x.id===id) || {ten:'Đã xóa',bieu:'❓',loai:'chi'}; }
+function timVi(id){ return D.vi.find(x=>x.id===id) || {ten:'Đã xóa',bieu:'❓'}; }
+function apGiaoDien(){
+  document.documentElement.setAttribute('data-giao-dien', D.cai.giaoDien);
+  const m = document.querySelector('meta[name="theme-color"]');
+  if(m) m.setAttribute('content', D.cai.giaoDien === 'sang' ? '#E3EBDE' : '#131E19');
+}
+apGiaoDien();
+
+/* gợn sóng khi bấm nút */
+function song(e){
+  const b = e.currentTarget, r = b.getBoundingClientRect();
+  const s = document.createElement('span');
+  s.className = 'song';
+  const d = Math.max(r.width, r.height) * .55;
+  s.style.width = s.style.height = d + 'px';
+  s.style.left = ((e.clientX||r.left+r.width/2) - r.left - d/2) + 'px';
+  s.style.top  = ((e.clientY||r.top+r.height/2) - r.top - d/2) + 'px';
+  b.appendChild(s); setTimeout(()=> s.remove(), 560);
+}
+function noiSong(sel){ $$(sel).forEach(b=>{ b.removeEventListener('pointerdown', song); b.addEventListener('pointerdown', song); }); }
+
+/* ══ Trạng thái ══ */
+let thangXem = khoaThang(new Date());
+let tabXem = 'tong';
+const MAU = ['#4FC08D','#93C36E','#E0A45C','#5EA8B8','#B79BD1','#7FBF9E','#C99A5C','#6E9AA8','#A8C47A'];
+
+function gdThang(k){ return D.gd.filter(g => g.ngay.slice(0,7) === k); }
+function chiThang(k){ return gdThang(k).filter(x=>x.loai==='chi').reduce((s,x)=>s+x.tien,0); }
+function thuThang(k){ return gdThang(k).filter(x=>x.loai==='thu').reduce((s,x)=>s+x.tien,0); }
+function chiTheoDM(k){
+  const g = {};
+  for(const x of gdThang(k)) if(x.loai==='chi') g[x.dm] = (g[x.dm]||0) + x.tien;
+  return g;
+}
+function soDuVi(id){
+  let s = (D.vi.find(v=>v.id===id)||{}).dauKy || 0;
+  for(const g of D.gd){
+    if(g.loai==='chi' && g.vi===id) s -= g.tien;
+    else if(g.loai==='thu' && g.vi===id) s += g.tien;
+    else if(g.loai==='chuyen'){ if(g.vi===id) s -= g.tien; if(g.viDen===id) s += g.tien; }
+  }
+  return s;
+}
+
+/* ══ Phần đầu ══ */
+function veDau(){
+  const [y,m] = thangXem.split('-');
+  $('#nhanThang').textContent = 'Tháng ' + (+m) + ' · ' + y;
+  const thu = thuThang(thangXem), chi = chiThang(thangXem);
+  $('#soThu').textContent = tien(thu);
+  $('#soChi').textContent = tien(chi);
+
+  const ns = D.cai.nsThang || 0, oTong = $('#soTong'), thanh = $('#thanhNS');
+  if(ns > 0){
+    const conLai = ns - chi, pt = Math.min(100, Math.round(chi/ns*100));
+    $('#nhanTong').textContent = conLai >= 0 ? 'Còn lại trong tháng' : 'Đã vượt ngân sách';
+    oTong.textContent = tien(Math.abs(conLai));
+    oTong.classList.toggle('am', conLai < 0);
+    $('#phuTong').textContent = 'Ngân sách tháng ' + tien(ns);
+    thanh.style.background = pt >= 100 ? 'var(--canh)' : (pt >= 80 ? 'var(--hp)' : 'var(--ngoc)');
+    requestAnimationFrame(()=>{ thanh.style.width = pt + '%'; });
+    $('#ctNS').textContent = 'Đã chi ' + tienNgan(chi) + ' / ' + tienNgan(ns);
+    $('#ctPT').textContent = pt + '%';
+  }else{
+    const chenh = thu - chi;
+    $('#nhanTong').textContent = chenh >= 0 ? 'Dư trong tháng' : 'Âm trong tháng';
+    oTong.textContent = tien(Math.abs(chenh));
+    oTong.classList.toggle('am', chenh < 0);
+    $('#phuTong').textContent = 'Chưa đặt ngân sách tháng';
+    thanh.style.width = '0%';
+    $('#ctNS').textContent = 'Đặt ngân sách trong ⚙️ Cài đặt';
+    $('#ctPT').textContent = '—';
+  }
+}
+
+/* ══ Tổng quan ══ */
+function veTong(){
+  const g = gdThang(thangXem).filter(x=>x.loai==='chi'), el = $('#tTong');
+  if(!g.length){
+    el.innerHTML = `<div class="hop"><div class="rong"><span class="e">🌱</span>
+      <p>Tháng này chưa có khoản chi nào</p><small>Bấm nút + để ghi phiếu đầu tiên</small></div></div>`;
+    return;
+  }
+  const gom = chiTheoDM(thangXem);
+  const ds = Object.entries(gom).map(([id,v])=>({id,v,dm:timDM(id)})).sort((a,b)=>b.v-a.v);
+  const tongChi = ds.reduce((s,x)=>s+x.v,0);
+  const R = 52, C = 2*Math.PI*R;
+
+  let goc = 0;
+  const cung = ds.map((x,i)=>{
+    const p = x.v/tongChi;
+    const s = `<circle class="lat" cx="66" cy="66" r="${R}" fill="none" stroke="${MAU[i%MAU.length]}"
+      stroke-width="21" stroke-dasharray="0 ${C}" data-da="${(p*C-2.5).toFixed(2)} ${C}"
+      stroke-dashoffset="${(-goc*C).toFixed(2)}" transform="rotate(-90 66 66)"/>`;
+    goc += p; return s;
+  }).join('');
+
+  const chuThich = ds.slice(0,6).map((x,i)=>`
+    <div class="chu-dong"><i class="cham" style="background:${MAU[i%MAU.length]}"></i>
+      <span>${x.dm.bieu} ${x.dm.ten}</span><b>${Math.round(x.v/tongChi*100)}%</b></div>`).join('');
+
+  const coNS = D.dm.filter(c=>c.loai==='chi' && c.ns>0);
+  let khoiNS = '';
+  if(coNS.length){
+    khoiNS = `<div class="muc"><div class="muc-dau"><h2>Ngân sách danh mục</h2>
+      <span>${coNS.length} mục</span></div><div class="hop">` +
+      coNS.map(c=>{
+        const d = gom[c.id] || 0, pt = Math.min(100, Math.round(d/c.ns*100)), vuot = d > c.ns;
+        return `<div class="ns ${vuot?'vuot':''}">
+          <div class="ns-dau"><span class="e">${c.bieu}</span><span class="t">${c.ten}</span>
+            <span class="s"><b>${tienNgan(d)}</b> / ${tienNgan(c.ns)}</span></div>
+          <div class="thanh"><i data-w="${pt}" style="background:${vuot?'var(--canh)':(pt>=80?'var(--hp)':'var(--ngoc)')}"></i></div>
+        </div>`;
+      }).join('') + '</div></div>';
+  }
+
+  const bang = ds.map((x,i)=>`
+    <div class="dong" style="--i:${i}">
+      <div class="bieu">${x.dm.bieu}</div>
+      <div class="dong-giua"><div class="dong-ten">${x.dm.ten}</div>
+        <div class="dong-phu">${g.filter(t=>t.dm===x.id).length} giao dịch</div></div>
+      <div class="dong-tien chi">${tien(x.v)}</div></div>`).join('');
+
+  el.innerHTML = `
+    <div class="muc"><div class="muc-dau"><h2>Chi theo danh mục</h2><span>${tien(tongChi)}</span></div>
+      <div class="hop"><div class="bd">
+        <div style="position:relative;width:132px;height:132px;flex-shrink:0">
+          <svg width="132" height="132" viewBox="0 0 132 132">
+            <circle cx="66" cy="66" r="${R}" fill="none" stroke="var(--nen-sau)" stroke-width="21"/>
+            ${cung}</svg>
+          <div class="bd-tam"><div><small>Tổng chi</small><b>${tienNgan(tongChi)}</b></div></div>
+        </div><div class="bd-chu">${chuThich}</div></div></div></div>
+    ${khoiNS}
+    <div class="muc"><div class="muc-dau"><h2>Chi tiết</h2></div>
+      <div class="hop hien-dan">${bang}</div></div>`;
+
+  requestAnimationFrame(()=>{
+    el.querySelectorAll('circle.lat').forEach(c=> c.setAttribute('stroke-dasharray', c.dataset.da));
+    el.querySelectorAll('.ns .thanh i').forEach(i=> i.style.width = i.dataset.w + '%');
+  });
+}
+
+/* ══ Giao dịch ══ */
+function veGd(){
+  const g = gdThang(thangXem).sort((a,b)=> a.ngay===b.ngay ? b.tao-a.tao : (a.ngay<b.ngay?1:-1));
+  const el = $('#tGd');
+  if(!g.length){
+    el.innerHTML = `<div class="hop"><div class="rong"><span class="e">📒</span>
+      <p>Tháng này chưa có ghi chép</p><small>Bấm nút + để thêm</small></div></div>`;
+    return;
+  }
+  const theoNgay = {};
+  for(const x of g) (theoNgay[x.ngay] = theoNgay[x.ngay] || []).push(x);
+  let i = 0;
+  el.innerHTML = '<div class="muc"><div class="hop hien-dan">' + Object.entries(theoNgay).map(([ng,ds])=>{
+    const net = ds.reduce((s,x)=> s + (x.loai==='thu'?x.tien:(x.loai==='chi'?-x.tien:0)), 0);
+    const dong = ds.map(x=>{
+      const st = `style="--i:${i++}"`;
+      if(x.loai==='chuyen') return `<button class="dong" ${st} data-gd="${x.id}">
+        <div class="bieu">🔄</div><div class="dong-giua"><div class="dong-ten">Chuyển ví</div>
+        <div class="dong-phu">${timVi(x.vi).ten} → ${timVi(x.viDen).ten}${x.ghi?' · '+x.ghi:''}</div></div>
+        <div class="dong-tien chuyen">${tienNgan(x.tien)}</div></button>`;
+      const c = timDM(x.dm);
+      return `<button class="dong" ${st} data-gd="${x.id}">
+        <div class="bieu">${c.bieu}</div><div class="dong-giua">
+        <div class="dong-ten">${x.ghi || c.ten}</div>
+        <div class="dong-phu">${c.ten} · ${timVi(x.vi).ten}</div></div>
+        <div class="dong-tien ${x.loai}">${x.loai==='chi'?'−':'+'}${tienNgan(x.tien)}</div></button>`;
+    }).join('');
+    const nd = `<div class="ngay-dau" style="--i:${i++}"><span>${nhanNgay(ng)}</span>
+      <b style="color:${net<0?'var(--hp)':'var(--ngoc)'}">${net>=0?'+':'−'}${tienNgan(Math.abs(net))}</b></div>`;
+    return nd + dong;
+  }).join('') + '</div></div>';
+  el.querySelectorAll('[data-gd]').forEach(b=> b.onclick = ()=> moPhieu(D.gd.find(x=>x.id===b.dataset.gd)));
+}
+
+/* ══ So sánh ══ */
+function veSs(){
+  const el = $('#tSs');
+  const soThang = 6;
+  const ks = [];
+  for(let i = soThang-1; i >= 0; i--) ks.push(dichThang(thangXem, -i));
+  const chis = ks.map(chiThang), thus = ks.map(thuThang);
+  const dinh = Math.max(...chis, ...thus, 1);
+  const coDL = D.gd.length > 0;
+
+  if(!coDL){
+    el.innerHTML = `<div class="hop"><div class="rong"><span class="e">🌿</span>
+      <p>Chưa đủ dữ liệu để so sánh</p><small>Ghi vài tháng rồi quay lại đây</small></div></div>`;
+    return;
+  }
+
+  const cot = ks.map((k,i)=>{
+    const h = Math.round(chis[i]/dinh*100);
+    const nay = k === thangXem;
+    return `<button class="cot ${nay?'nay':''}" data-k="${k}" style="--i:${i}">
+      <div class="cot-so">${chis[i] ? tienNgan(chis[i]) : ''}</div>
+      <div class="thanh-doc" style="flex:1"><i data-h="${h}"></i></div>
+      <small>T${+k.split('-')[1]}</small></button>`;
+  }).join('');
+
+  // tháng này vs tháng trước
+  const kTruoc = dichThang(thangXem, -1);
+  const cN = chiThang(thangXem), cT = chiThang(kTruoc);
+  const tN = thuThang(thangXem), tT = thuThang(kTruoc);
+  const duN = tN - cN, duT = tT - cT;
+
+  const trungBinh = chis.filter((v,i)=> v>0 || i===soThang-1).length
+    ? Math.round(chis.reduce((s,v)=>s+v,0) / soThang) : 0;
+
+  function mui(nay, truoc, nguoc){
+    // nguoc = true -> tăng là tốt (thu vào)
+    if(!truoc && !nay) return '<span class="mui bang">—</span>';
+    if(!truoc) return '<span class="mui ' + (nguoc?'xuong':'len') + '">mới</span>';
+    const d = nay - truoc, pt = Math.round(d/truoc*100);
+    if(Math.abs(pt) < 1) return '<span class="mui bang">≈ 0%</span>';
+    const tot = nguoc ? d > 0 : d < 0;
+    return `<span class="mui ${tot?'xuong':'len'}">${d>0?'▲':'▼'} ${Math.abs(pt)}%</span>`;
+  }
+
+  const dmN = chiTheoDM(thangXem), dmT = chiTheoDM(kTruoc);
+  const idDM = [...new Set([...Object.keys(dmN), ...Object.keys(dmT)])]
+    .map(id=>({id, n:dmN[id]||0, t:dmT[id]||0, dm:timDM(id)}))
+    .sort((a,b)=> Math.abs(b.n-b.t) - Math.abs(a.n-a.t));
+
+  const bangDM = idDM.length ? idDM.map((x,i)=>`
+    <div class="ss" style="--i:${i}">
+      <div class="bieu">${x.dm.bieu}</div>
+      <div class="ss-ten">${x.dm.ten}</div>
+      <div class="ss-cot"><div class="a">${tienNgan(x.n)}</div>
+        <div class="b">trước ${tienNgan(x.t)}</div></div>
+      ${mui(x.n, x.t, false)}
+    </div>`).join('')
+    : '<div class="rong" style="padding:26px"><small>Hai tháng này chưa có khoản chi nào</small></div>';
+
+  const tenT = 'T' + (+kTruoc.split('-')[1]);
+  const tenN = 'T' + (+thangXem.split('-')[1]);
+
+  el.innerHTML = `
+    <div class="muc"><div class="muc-dau"><h2>Chi ${soThang} tháng gần đây</h2>
+      <span>TB ${tienNgan(trungBinh)}/tháng</span></div>
+      <div class="hop"><div class="cot-khung" id="cotKhung">${cot}</div>
+        <div style="padding:12px 14px 14px;text-align:center;font-size:11.5px;color:var(--mo)">
+          Chạm vào cột để xem tháng đó</div></div></div>
+
+    <div class="muc"><div class="muc-dau"><h2>${tenN} so với ${tenT}</h2></div>
+      <div class="hop"><div class="tomtat">
+        <div><div class="nhan">Chi ra</div>
+          <div class="v so" style="color:var(--hp)">${tienNgan(cN)}</div>
+          <div class="d">${mui(cN, cT, false)}</div></div>
+        <div><div class="nhan">Thu vào</div>
+          <div class="v so" style="color:var(--ngoc)">${tienNgan(tN)}</div>
+          <div class="d">${mui(tN, tT, true)}</div></div>
+        <div><div class="nhan">Dư ra</div>
+          <div class="v so" style="color:${duN<0?'var(--canh)':'var(--chu)'}">${tienNgan(duN)}</div>
+          <div class="d">${mui(duN, duT, true)}</div></div>
+      </div></div></div>
+
+    <div class="muc"><div class="muc-dau"><h2>Chênh lệch theo danh mục</h2>
+      <span>${tenN} ↔ ${tenT}</span></div>
+      <div class="hop hien-dan">${bangDM}</div></div>`;
+
+  requestAnimationFrame(()=>{
+    el.querySelectorAll('.thanh-doc i').forEach(i=> i.style.height = Math.max(2, +i.dataset.h) + '%');
+  });
+  el.querySelectorAll('.cot').forEach(b=> b.onclick = ()=>{
+    if(b.dataset.k === thangXem) return;
+    const lui = b.dataset.k < thangXem;
+    thangXem = b.dataset.k; rung(10); veTat(lui ? 'phai' : 'trai');
+  });
+}
+
+/* ══ Ví ══ */
+function veVi(){
+  const tong = D.vi.reduce((s,v)=>s+soDuVi(v.id),0);
+  $('#tVi').innerHTML = `
+    <div class="muc"><div class="muc-dau"><h2>Tổng tài sản</h2>
+      <span class="so" style="font-weight:600;color:var(--chu)">${tien(tong)}</span></div>
+      <div class="hop hien-dan">` +
+      (D.vi.length ? D.vi.map((v,i)=>{
+        const s = soDuVi(v.id);
+        return `<button class="vi-dong" data-vi="${v.id}" style="--i:${i}">
+          <div class="bieu">${v.bieu}</div>
+          <div class="dong-giua"><div class="dong-ten">${v.ten}</div>
+            <div class="dong-phu">Số dư đầu ${tienNgan(v.dauKy)}</div></div>
+          <div class="dong-tien so" style="color:${s<0?'var(--canh)':'var(--chu)'}">${tien(s)}</div>
+        </button>`; }).join('')
+        : '<div class="rong"><span class="e">👛</span><p>Chưa có ví nào</p></div>')
+      + `</div></div><button class="nut nut-phu" id="btThemVi">+ Thêm ví mới</button>`;
+  $('#btThemVi').onclick = ()=> suaVi(null);
+  noiSong('#btThemVi');
+  $$('#tVi [data-vi]').forEach(b=> b.onclick = ()=> suaVi(D.vi.find(v=>v.id===b.dataset.vi)));
+}
+
+function veTat(huong){
+  veDau();
+  const el = tabXem==='tong' ? $('#tTong') : tabXem==='gd' ? $('#tGd') : tabXem==='ss' ? $('#tSs') : $('#tVi');
+  ({tong:veTong, gd:veGd, ss:veSs, vi:veVi})[tabXem]();
+  if(huong){
+    el.classList.remove('tab-trai','tab-phai'); void el.offsetWidth;
+    el.classList.add(huong==='trai' ? 'tab-trai' : 'tab-phai');
+  }
+}
+
+/* ══ Phiếu nhập ══ */
+let P = { loai:'chi', tien:'', dm:null, vi:null, viDen:null, sua:null };
+
+function moPhieu(gd){
+  if(gd){
+    P = { loai:gd.loai, tien:String(gd.tien), dm:gd.dm, vi:gd.vi, viDen:gd.viDen, sua:gd.id };
+    $('#oNgay').value = gd.ngay; $('#oGhiChu').value = gd.ghi || '';
+    $('#btXoa').classList.remove('an');
+  }else{
+    P = { loai:'chi', tien:'', dm:null, vi:(D.vi[0]||{}).id, viDen:(D.vi[1]||{}).id, sua:null };
+    $('#oNgay').value = thangXem === khoaThang(new Date()) ? ngayISO(new Date()) : thangXem + '-01';
+    $('#oGhiChu').value = ''; $('#btXoa').classList.add('an');
+  }
+  veP();
+  $('#man').classList.add('mo'); $('#phieu').classList.add('mo'); $('#fab').classList.add('mo');
+  rung(12);
+}
+function dongPhieu(){
+  $('#man').classList.remove('mo');
+  $('#phieu').classList.remove('mo');
+  $('#phieuCD').classList.remove('mo');
+  $('#fab').classList.remove('mo');
+}
+
+function veP(){
+  const ten = {chi:'Phiếu chi', thu:'Phiếu thu', chuyen:'Phiếu chuyển ví'};
+  $('#phieuTen').textContent = P.sua ? 'Sửa ' + ten[P.loai].toLowerCase() : ten[P.loai];
+  $$('.loai button').forEach(b=> b.setAttribute('aria-pressed', b.dataset.l===P.loai));
+
+  const o = $('#oTien');
+  o.textContent = P.tien ? tien(+P.tien) : '0 ₫';
+  o.className = 'tien-so so ' + (P.tien ? P.loai : 'trong');
+
+  const chuyen = P.loai === 'chuyen';
+  $('#oDanhMuc').classList.toggle('an', chuyen);
+  $('#oViDen').classList.toggle('an', !chuyen);
+  $('#nhanViTu').textContent = chuyen ? 'Chuyển từ ví' : 'Ví';
+
+  if(!chuyen){
+    const ds = D.dm.filter(c=>c.loai===P.loai);
+    if(!ds.find(c=>c.id===P.dm)) P.dm = (ds[0]||{}).id;
+    $('#chipDM').innerHTML = ds.map(c=>
+      `<button class="chip" data-c="${c.id}" aria-pressed="${c.id===P.dm}">${c.bieu} ${c.ten}</button>`).join('');
+    $$('#chipDM .chip').forEach(b=> b.onclick = ()=>{ P.dm = b.dataset.c; rung(6); veP(); });
+  }
+  const veChip = (sel, key) => {
+    $(sel).innerHTML = D.vi.map(v=>
+      `<button class="chip" data-v="${v.id}" aria-pressed="${v.id===P[key]}">${v.bieu} ${v.ten}</button>`).join('');
+    $$(sel+' .chip').forEach(b=> b.onclick = ()=>{ P[key] = b.dataset.v; rung(6); veP(); });
+  };
+  veChip('#chipVi','vi');
+  if(chuyen) veChip('#chipVi2','viDen');
+}
+
+function luuPhieu(){
+  const t = +P.tien;
+  if(!t){ banh('Nhập số tiền trước đã'); rung([8,40,8]); return; }
+  if(!P.vi){ banh('Chưa có ví — thêm ví ở tab Ví'); return; }
+  if(P.loai==='chuyen'){
+    if(!P.viDen){ banh('Chọn ví nhận'); return; }
+    if(P.viDen===P.vi){ banh('Hai ví phải khác nhau'); return; }
+  }else if(!P.dm){ banh('Chọn danh mục'); return; }
+
+  const ban = {
+    id: P.sua || ma(), loai: P.loai, tien: t,
+    dm: P.loai==='chuyen' ? null : P.dm,
+    vi: P.vi, viDen: P.loai==='chuyen' ? P.viDen : null,
+    ngay: $('#oNgay').value || ngayISO(new Date()),
+    ghi: $('#oGhiChu').value.trim(),
+    tao: P.sua ? ((D.gd.find(x=>x.id===P.sua)||{}).tao || Date.now()) : Date.now()
+  };
+  if(P.sua) D.gd[D.gd.findIndex(x=>x.id===P.sua)] = ban; else D.gd.push(ban);
+  ghi(); rung([10,30,16]);
+
+  const d = $('#dau');
+  d.textContent = P.sua ? 'ĐÃ SỬA' : 'ĐÃ GHI';
+  d.classList.remove('dong-dau'); void d.offsetWidth; d.classList.add('dong-dau');
+
+  thangXem = ban.ngay.slice(0,7);
+  setTimeout(()=>{
+    dongPhieu(); veTat();
+    if(!luuDuoc) banh('⚠️ Trình duyệt chặn lưu — hãy xuất file sao lưu');
+  }, 520);
+}
+
+/* ══ Cài đặt ══ */
+function moCaiDat(){
+  veCaiDat();
+  $('#man').classList.add('mo'); $('#phieuCD').classList.add('mo');
+}
+function veCaiDat(){
+  $('#cdTen').textContent = 'Cài đặt';
+  $('#cdThan').innerHTML = `
+    <div class="truong" style="margin-top:16px"><label>Giao diện</label>
+      <div class="loai" style="margin:0">
+        <button data-gd="toi" aria-pressed="${D.cai.giaoDien==='toi'}">🌲 Mộc đêm</button>
+        <button data-gd="sang" aria-pressed="${D.cai.giaoDien==='sang'}">🎋 Mộc sáng</button>
+      </div></div>
+
+    <div class="truong" style="margin-top:18px"><label>Ngân sách chi mỗi tháng</label>
+      <input type="tel" inputmode="numeric" class="o so" id="cdNS" value="${D.cai.nsThang||''}" placeholder="Ví dụ 15000000">
+      <div style="font-size:12px;color:var(--mo);margin-top:6px" id="cdNSxem">
+        ${D.cai.nsThang ? tien(D.cai.nsThang) : 'Để trống nếu không dùng ngân sách'}</div></div>
+
+    <div class="muc-dau" style="margin-top:20px"><h2>Danh mục &amp; ngân sách riêng</h2></div>
+    <div class="hop" id="cdDM">${D.dm.map(c=>`
+      <div class="ns"><div class="ns-dau"><span class="e">${c.bieu}</span>
+        <span class="t">${c.ten}</span>
+        <span class="s" style="color:${c.loai==='thu'?'var(--ngoc)':'var(--mo)'}">${c.loai==='thu'?'thu':'chi'}</span></div>
+        ${c.loai==='chi' ? `<input type="tel" inputmode="numeric" class="o so" data-ns="${c.id}"
+          value="${c.ns||''}" placeholder="Ngân sách riêng (trống = không đặt)" style="padding:9px 11px;font-size:13px">` : ''}
+      </div>`).join('')}</div>
+
+    <div class="muc-dau" style="margin-top:20px"><h2>Sao lưu</h2></div>
+    <p style="font-size:12.5px;color:var(--mo);margin:0 0 11px">
+      Dữ liệu chỉ nằm trong trình duyệt máy này. Xóa lịch sử duyệt web hoặc gỡ app là mất.
+      Nên xuất file sao lưu định kỳ.</p>
+    <div class="nut-hang" style="margin-bottom:10px">
+      <button class="nut nut-phu" id="cdXuat">⬇️ Xuất file</button>
+      <button class="nut nut-phu" id="cdNhap">⬆️ Nhập file</button></div>
+    <input type="file" id="cdFile" accept="application/json,.json" class="an">
+    <button class="nut nut-canh" id="cdXoaHet" style="margin-top:18px">Xóa toàn bộ dữ liệu</button>
+    <div style="height:14px"></div>`;
+
+  $$('#cdThan [data-gd]').forEach(b=> b.onclick = ()=>{
+    D.cai.giaoDien = b.dataset.gd; ghi(); apGiaoDien(); rung(8);
+    $$('#cdThan [data-gd]').forEach(x=> x.setAttribute('aria-pressed', x===b));
+  });
+
+  const oNS = $('#cdNS');
+  oNS.oninput = ()=>{
+    const v = +oNS.value.replace(/\D/g,'') || 0;
+    D.cai.nsThang = v; ghi(); veDau();
+    $('#cdNSxem').textContent = v ? tien(v) : 'Để trống nếu không dùng ngân sách';
+  };
+  $$('#cdDM [data-ns]').forEach(i=> i.oninput = ()=>{
+    const c = D.dm.find(x=>x.id===i.dataset.ns);
+    c.ns = +i.value.replace(/\D/g,'') || 0; ghi();
+  });
+  $('#cdXuat').onclick = xuatFile;
+  $('#cdNhap').onclick = ()=> $('#cdFile').click();
+  $('#cdFile').onchange = nhapFile;
+  $('#cdXoaHet').onclick = ()=>{
+    if(confirm('Xóa hết giao dịch, ví và danh mục? Không khôi phục được.')){
+      const gd = D.cai.giaoDien;
+      D = macDinh(); D.cai.giaoDien = gd; ghi(); dongPhieu(); veTat(); banh('Đã xóa toàn bộ');
+    }
+  };
+  noiSong('#cdThan .nut');
+}
+
+function xuatFile(){
+  const ten = 'so-chi-tieu-' + ngayISO(new Date()) + '.json';
+  const b = new Blob([JSON.stringify(D,null,1)], {type:'application/json'});
+  const u = URL.createObjectURL(b), a = document.createElement('a');
+  a.href = u; a.download = ten; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(u), 1500);
+  banh('Đã xuất ' + ten);
+}
+function nhapFile(e){
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const x = JSON.parse(r.result);
+      if(!x || !Array.isArray(x.gd) || !Array.isArray(x.vi)) throw 0;
+      if(!confirm('Thay toàn bộ dữ liệu hiện tại bằng file này?')) return;
+      D = x; D.cai = D.cai || {}; D.cai.giaoDien = D.cai.giaoDien || 'toi'; D.dm = D.dm || [];
+      ghi(); apGiaoDien(); dongPhieu(); veTat(); banh('Đã nhập ' + D.gd.length + ' giao dịch');
+    }catch(err){ banh('File không đúng định dạng sao lưu'); }
+  };
+  r.readAsText(f); e.target.value = '';
+}
+
+/* ══ Sửa ví ══ */
+function suaVi(v){
+  const moi = !v;
+  $('#cdTen').textContent = moi ? 'Ví mới' : 'Sửa ví';
+  $('#cdThan').innerHTML = `
+    <div class="truong" style="margin-top:16px"><label>Tên ví</label>
+      <input type="text" class="o" id="vTen" value="${v?v.ten.replace(/"/g,'&quot;'):''}" placeholder="Ví dụ: Vietcombank" maxlength="30"></div>
+    <div class="truong"><label>Biểu tượng</label>
+      <div class="chip-hang" id="vBieu">${['💵','🏦','💳','👛','🐷','📱','🏧','💰','🌿'].map(e=>
+        `<button class="chip" data-e="${e}" aria-pressed="${v&&v.bieu===e}" style="font-size:19px;padding:8px 12px">${e}</button>`).join('')}</div></div>
+    <div class="truong"><label>Số dư ban đầu</label>
+      <input type="tel" inputmode="numeric" class="o so" id="vDau" value="${v?(v.dauKy||''):''}" placeholder="0">
+      <div style="font-size:12px;color:var(--mo);margin-top:6px" id="vDauXem"></div></div>
+    <div class="nut-hang" style="margin-top:4px">
+      ${moi?'':'<button class="nut nut-canh" id="vXoa">Xóa ví</button>'}
+      <button class="nut nut-chinh" id="vLuu">${moi?'Tạo ví':'Lưu ví'}</button>
+    </div><div style="height:14px"></div>`;
+
+  let bieu = v ? v.bieu : '💵';
+  const set = ()=> $$('#vBieu .chip').forEach(b=> b.setAttribute('aria-pressed', b.dataset.e===bieu));
+  set();
+  $$('#vBieu .chip').forEach(b=> b.onclick = ()=>{ bieu = b.dataset.e; rung(6); set(); });
+
+  const oD = $('#vDau');
+  const xem = ()=> $('#vDauXem').textContent = oD.value ? tien(+oD.value.replace(/\D/g,'')||0) : '';
+  oD.oninput = xem; xem();
+
+  $('#vLuu').onclick = ()=>{
+    const ten = $('#vTen').value.trim();
+    if(!ten){ banh('Đặt tên cho ví'); return; }
+    const dauKy = +oD.value.replace(/\D/g,'') || 0;
+    if(moi) D.vi.push({id:ma(), ten, bieu, dauKy}); else Object.assign(v, {ten, bieu, dauKy});
+    ghi(); dongPhieu(); veTat(); banh(moi ? 'Đã tạo ví' : 'Đã lưu ví');
+  };
+  if(!moi) $('#vXoa').onclick = ()=>{
+    const dung = D.gd.filter(g=> g.vi===v.id || g.viDen===v.id).length;
+    if(dung){ banh('Ví còn ' + dung + ' giao dịch, không xóa được'); return; }
+    if(!confirm('Xóa ví "' + v.ten + '"?')) return;
+    D.vi = D.vi.filter(x=>x.id!==v.id);
+    ghi(); dongPhieu(); veTat(); banh('Đã xóa ví');
+  };
+  noiSong('#cdThan .nut');
+  $('#man').classList.add('mo'); $('#phieuCD').classList.add('mo');
+}
+
+/* ══ Sự kiện ══ */
+$('#btTruoc').onclick = ()=>{ thangXem = dichThang(thangXem,-1); rung(8); veTat('phai'); };
+$('#btSau').onclick   = ()=>{ thangXem = dichThang(thangXem, 1); rung(8); veTat('trai'); };
+
+const THU_TU = ['tong','gd','ss','vi'];
+$$('nav.tab button').forEach(b=> b.onclick = ()=>{
+  const cu = THU_TU.indexOf(tabXem), moi = THU_TU.indexOf(b.dataset.tab);
+  if(cu === moi) return;
+  tabXem = b.dataset.tab; rung(7);
+  $$('nav.tab button').forEach(x=> x.setAttribute('aria-selected', x===b));
+  $('#tTong').classList.toggle('an', tabXem!=='tong');
+  $('#tGd').classList.toggle('an', tabXem!=='gd');
+  $('#tSs').classList.toggle('an', tabXem!=='ss');
+  $('#tVi').classList.toggle('an', tabXem!=='vi');
+  veTat(moi > cu ? 'trai' : 'phai');
+});
+
+$('#fab').onclick = ()=> moPhieu(null);
+$('#btDong').onclick = dongPhieu;
+$('#btDongCD').onclick = dongPhieu;
+$('#man').onclick = dongPhieu;
+$('#btCaiDat').onclick = moCaiDat;
+$('#btLuu').onclick = luuPhieu;
+$('#btXoa').onclick = ()=>{
+  if(!confirm('Xóa phiếu này?')) return;
+  D.gd = D.gd.filter(x=>x.id!==P.sua);
+  ghi(); dongPhieu(); veTat(); banh('Đã xóa phiếu');
+};
+$$('.loai button[data-l]').forEach(b=> b.onclick = ()=>{ P.loai = b.dataset.l; rung(7); veP(); });
+
+$('#phim').onclick = e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  const p = b.dataset.p;
+  if(p === 'x') P.tien = P.tien.slice(0,-1);
+  else if(P.tien.length < 12) P.tien = (P.tien === '0' ? '' : P.tien) + p;
+  rung(7); veP();
+  const o = $('#oTien');
+  o.classList.remove('bung'); void o.offsetWidth; o.classList.add('bung');
+};
+noiSong('#phim button');
+noiSong('#btLuu');
+noiSong('#btXoa');
+
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') dongPhieu(); });
+
+/* ══ Khởi động ══ */
+veTat();
+if(!luuDuoc) setTimeout(()=> banh('⚠️ Không lưu được — hãy mở app từ màn hình chính'), 900);
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=> navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
