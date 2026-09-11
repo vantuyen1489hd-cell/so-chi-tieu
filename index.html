@@ -233,6 +233,27 @@ main{padding:16px var(--sp) 0;flex:1}
 .tomtat .v{font-family:var(--f-so);font-weight:600;font-size:17px;margin:3px 0 2px}
 .tomtat .d{font-size:11px;font-weight:600;font-family:var(--f-so)}
 
+/* ══ Nhóm danh mục xổ xuống ══ */
+.nhom{border-bottom:1px solid var(--vach-mo)}
+.nhom:last-child{border-bottom:none}
+.nhom>.dong{border-bottom:none}
+.mui-mo{flex-shrink:0;color:var(--mo);font-size:20px;line-height:1;width:16px;text-align:center;
+  transition:transform .32s var(--nay),color .25s}
+.dm-dau[aria-expanded="true"]{background:var(--the-noi)}
+.dm-dau[aria-expanded="true"] .mui-mo{transform:rotate(90deg);color:var(--ngoc)}
+.dm-dau[aria-expanded="true"] .bieu{border-color:var(--ngoc);background:var(--ngoc-mo)}
+.con{max-height:0;overflow:hidden;background:var(--nen-sau);transition:max-height .4s var(--muot)}
+.con-dong{position:relative;padding:11px 14px 11px 17px;gap:11px;
+  border-bottom:1px solid var(--vach-mo)}
+.con-dong:last-child{border-bottom:none}
+.con-dong::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ngoc-mo)}
+.con-ngay{flex-shrink:0;width:44px;padding:5px 0;text-align:center;border-radius:9px;
+  background:var(--the);border:1px solid var(--vach-mo);
+  font-family:var(--f-so);font-size:11.5px;font-weight:600;color:var(--chu-2)}
+.con .dong-ten{font-size:13.5px;font-weight:500}
+.con .dong-phu{font-size:11.5px}
+.con .dong-tien{font-size:13.5px}
+
 /* ══ Ví ══ */
 .vi-dong{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--vach-mo);
   width:100%;text-align:left;background:transparent;transition:background .16s,transform .16s}
@@ -398,7 +419,7 @@ footer{text-align:center;padding:18px 0 6px;font-size:11px;color:var(--mo);lette
     <div id="tSs" class="an"></div>
     <div id="tVi" class="an"></div>
   </main>
-  <footer>Dữ liệu lưu trên máy này · v1.1</footer>
+  <footer>Dữ liệu lưu trên máy này · v1.2</footer>
 </div>
 
 <button id="fab" aria-label="Thêm giao dịch">+</button>
@@ -606,6 +627,14 @@ function veDau(){
 }
 
 /* ══ Tổng quan ══ */
+/* ghi nhớ các danh mục đang xổ ra, để vẽ lại không bị đóng sập */
+let nhomMo = new Set();
+/* chiều cao phần con — dự phòng khi trình duyệt chưa tính được bố cục */
+function caoCon(con){
+  const h = con.scrollHeight;
+  return (h > 0 ? h : con.querySelectorAll('.con-dong').length * 62 + 8) + 'px';
+}
+
 function veTong(){
   const g = gdThang(thangXem).filter(x=>x.loai==='chi'), el = $('#tTong');
   if(!g.length){
@@ -646,12 +675,26 @@ function veTong(){
       }).join('') + '</div></div>';
   }
 
-  const bang = ds.map((x,i)=>`
-    <div class="dong" style="--i:${i}">
-      <div class="bieu">${x.dm.bieu}</div>
-      <div class="dong-giua"><div class="dong-ten">${x.dm.ten}</div>
-        <div class="dong-phu">${g.filter(t=>t.dm===x.id).length} giao dịch</div></div>
-      <div class="dong-tien chi">${tien(x.v)}</div></div>`).join('');
+  const bang = ds.map((x,i)=>{
+    const gds = g.filter(t=>t.dm===x.id)
+      .sort((a,b)=> a.ngay===b.ngay ? b.tao-a.tao : (a.ngay<b.ngay?1:-1));
+    const con = gds.map(t=>`
+      <button class="dong con-dong" data-gd="${t.id}">
+        <div class="con-ngay">${+t.ngay.slice(8)}/${+t.ngay.slice(5,7)}</div>
+        <div class="dong-giua"><div class="dong-ten">${t.ghi || x.dm.ten}</div>
+          <div class="dong-phu">${timVi(t.vi).bieu} ${timVi(t.vi).ten}</div></div>
+        <div class="dong-tien chi">${tien(t.tien)}</div></button>`).join('');
+    return `<div class="nhom" style="--i:${i}">
+      <button class="dong dm-dau" data-mo="${x.id}" aria-expanded="${nhomMo.has(x.id)}">
+        <div class="bieu">${x.dm.bieu}</div>
+        <div class="dong-giua"><div class="dong-ten">${x.dm.ten}</div>
+          <div class="dong-phu">${gds.length} giao dịch · ${Math.round(x.v/tongChi*100)}% tổng chi</div></div>
+        <div class="dong-tien chi">${tien(x.v)}</div>
+        <span class="mui-mo">›</span>
+      </button>
+      <div class="con" data-con="${x.id}">${con}</div>
+    </div>`;
+  }).join('');
 
   el.innerHTML = `
     <div class="muc"><div class="muc-dau"><h2>Chi theo danh mục</h2><span>${tien(tongChi)}</span></div>
@@ -663,12 +706,38 @@ function veTong(){
           <div class="bd-tam"><div><small>Tổng chi</small><b>${tienNgan(tongChi)}</b></div></div>
         </div><div class="bd-chu">${chuThich}</div></div></div></div>
     ${khoiNS}
-    <div class="muc"><div class="muc-dau"><h2>Chi tiết</h2></div>
+    <div class="muc"><div class="muc-dau"><h2>Chi tiết</h2>
+      <span>Chạm để xem giao dịch</span></div>
       <div class="hop hien-dan">${bang}</div></div>`;
 
   requestAnimationFrame(()=>{
     el.querySelectorAll('circle.lat').forEach(c=> c.setAttribute('stroke-dasharray', c.dataset.da));
     el.querySelectorAll('.ns .thanh i').forEach(i=> i.style.width = i.dataset.w + '%');
+    // mở lại các nhóm đang xem dở
+    el.querySelectorAll('.con').forEach(con=>{
+      if(nhomMo.has(con.dataset.con)) con.style.maxHeight = caoCon(con);
+    });
+  });
+
+  // đóng mở nhóm danh mục
+  el.querySelectorAll('[data-mo]').forEach(b=>{
+    b.onclick = ()=>{
+      const id = b.dataset.mo;
+      const con = el.querySelector('[data-con="' + id + '"]');
+      if(!con) return;
+      const dangMo = nhomMo.has(id);
+      if(dangMo){ nhomMo.delete(id); con.style.maxHeight = '0px'; }
+      else { nhomMo.add(id); con.style.maxHeight = caoCon(con); }
+      b.setAttribute('aria-expanded', dangMo ? 'false' : 'true');
+      rung(7);
+    };
+  });
+  // chạm giao dịch con để sửa
+  el.querySelectorAll('.con [data-gd]').forEach(b=>{
+    b.onclick = e=>{
+      e.stopPropagation();
+      moPhieu(D.gd.find(x=>x.id===b.dataset.gd));
+    };
   });
 }
 

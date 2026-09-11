@@ -1,6 +1,6 @@
 /* Service worker — giữ app chạy được khi mất mạng.
    Đổi PHIEN_BAN mỗi lần sửa index.html để máy tải bản mới. */
-const PHIEN_BAN = 'so-chi-tieu-v1.1';
+const PHIEN_BAN = 'so-chi-tieu-v1.2';
 const CAN = [
   './',
   './index.html',
